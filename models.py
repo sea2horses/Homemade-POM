@@ -26,6 +26,16 @@ class ConstraintType(Enum):
             case _:
                 raise Exception(f"{string} is not a valid constraint type.")
 
+    @staticmethod
+    def constrainttype_to_str(type: 'ConstraintType'):
+        match type:
+            case ConstraintType.LIMITATION:
+                return "<="
+            case ConstraintType.EXACTITUDE:
+                return "="
+            case ConstraintType.REQUIREMENT:
+                return ">="
+
 
 class MO_Model:
 
@@ -311,6 +321,76 @@ class Simplex_Solver:
 
         return sol, final_sum
 
+    def check(self, solutions: dict[str, Fraction]):
+        self.log("Corroborando si las soluciones son válidas...\n")
+
+        # def get_or_0(var: str) -> Fraction:
+        #     return Fraction(0) if var not in solutions else solutions[var]
+
+        def constrast(value: Fraction, comp: ConstraintType, result: Fraction):
+            match comp:
+                case ConstraintType.LIMITATION:
+                    if value <= result:
+                        self.log(f"{float(value)} <= {result}? Si!")
+                        return True
+                    else:
+                        self.log(
+                            f"{float(value)} <= {result}? NO! hubo un error")
+                        return False
+                case ConstraintType.EXACTITUDE:
+                    if value == result:
+                        self.log(f"{float(value)} == {result}? Si!")
+                        return True
+                    else:
+                        self.log(
+                            f"{float(value)} == {result}? NO! hubo un error")
+                        return False
+                case ConstraintType.REQUIREMENT:
+                    if value >= result:
+                        self.log(f"{float(value)} >= {result}? Si!")
+                        return True
+                    else:
+                        self.log(
+                            f"{float(value)} >= {result}? NO! hubo un error")
+                        return False
+
+        slack_vars = 0
+        art_vars = 0
+
+        var_list: list[Fraction] = []
+        for i in range(self.model.varcount):
+            if x_index(i + 1) not in solutions:
+                var_list.append(Fraction(0))
+            else:
+                var_list.append(solutions[x_index(i+1)])
+
+        error_count = 0
+        for i, constraint in enumerate(self.model.constraints):
+            eqconstraint = ""
+            equation = ""
+            result: Fraction = Fraction(0)
+            for i in range(self.model.varcount):
+                if i != 0:
+                    equation += " + "
+                    eqconstraint += " + "
+                multiplication = var_list[i] * constraint[0][i]
+                result += multiplication
+                equation += f"{multiplication} ⋅ {x_index(i + 1)}"
+                eqconstraint += f"{constraint[0][i]} ⋅ {x_index(i + 1)}"
+            equation += f" = {float(result)} ({result})"
+            eqconstraint += f" {ConstraintType.constrainttype_to_str(constraint[1])} {constraint[2]}"
+
+            self.log(f"Restricción #{i + 1}: \t{eqconstraint}")
+            self.log(equation)
+            if not constrast(result, constraint[1], constraint[2]):
+                error_count += 1
+            # Line skip
+            self.log()
+
+        if error_count > 0:
+            raise Exception(
+                f"Hubo un error generando la solución. La solución proporcionada es inválida. (# de Errores: {error_count}). Por favor reportar en https://github.com/sea2horses/Homemade-POM")
+
     def solve(self):
         if self.model.objective_function is None:
             raise ValueError(
@@ -416,9 +496,18 @@ class Simplex_Solver:
         val_dict: dict[str, Fraction]
         opt_sol: Fraction
 
-        val_dict, opt_sol = self._simplex_solver(
-            non_basic_variables, basic_variables, value_grid, zrow, results, variables)
+        # Prevent contamination yknow
+        nbv: list[str] = deepcopy(non_basic_variables)
+        bv: list[str] = deepcopy(basic_variables)
+        vg: list[list[Fraction]] = deepcopy(value_grid)
+        _zrow: list[Fraction] = deepcopy(zrow)
+        resrow: list[Fraction] = deepcopy(results)
+        vars: dict[str, Fraction] = deepcopy(variables)
 
+        val_dict, opt_sol = self._simplex_solver(
+            nbv, bv, vg, _zrow, resrow, vars)
+
+        self.check(val_dict)
         var_val_list: list[Fraction] = []
         for i in range(len(obj_coefficient_list)):
             if x_index(i + 1) not in val_dict:

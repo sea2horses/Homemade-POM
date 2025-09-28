@@ -143,12 +143,12 @@ class MainWindow(QMainWindow):
             if self.opt_combo.currentText() == "Minimize":
                 objval = -objval
 
-            self.output.appendPlainText("\nFinal Solution:")
+            self.output.appendPlainText("\nSolución Final:")
             for i, v in enumerate(solution, start=1):
                 self.output.appendPlainText(
                     f"x{i} = {float(v):.6g} ({str(v)})")
             self.output.appendPlainText(
-                f"Objective value = {float(objval):.6g} ({str(objval)})")
+                f"Valor Objetivo = {float(objval):.6g} ({str(objval)})")
         except Exception as e:
             print(traceback.format_exc())
             QMessageBox.critical(self, "Error", str(e))
