@@ -1,6 +1,5 @@
 # Represents a Linear Programming Model
 from fractions import Fraction
-from tabulate import tabulate
 from copy import deepcopy
 from enum import Enum
 

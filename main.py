@@ -21,7 +21,7 @@ Set up virtual environment (might be optional)
 2. source .venv/Scripts/activate.bat
 
 Install PySide 6
-3. pip install pyside6 tabulate
+3. pip install pyside6 
 4. python main.py
 """
 
