@@ -365,7 +365,7 @@ class Simplex_Solver:
                 var_list.append(solutions[x_index(i+1)])
 
         error_count = 0
-        for i, constraint in enumerate(self.model.constraints):
+        for j, constraint in enumerate(self.model.constraints):
             eqconstraint = ""
             equation = ""
             result: Fraction = Fraction(0)
@@ -380,7 +380,7 @@ class Simplex_Solver:
             equation += f" = {float(result)} ({result})"
             eqconstraint += f" {ConstraintType.constrainttype_to_str(constraint[1])} {constraint[2]}"
 
-            self.log(f"Restricción #{i + 1}: \t{eqconstraint}")
+            self.log(f"Restricción #{j + 1}: \t{eqconstraint}")
             self.log(equation)
             if not constrast(result, constraint[1], constraint[2]):
                 error_count += 1
