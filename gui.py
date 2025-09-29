@@ -136,7 +136,7 @@ class MainWindow(QMainWindow):
                 model.add_constraint(coeffs, ctype, rhs)
 
             solver = Simplex_Solver(
-                model, print_function=lambda msg: self.output.appendPlainText(msg), input_function=self.input_method)
+                model, print_function=lambda msg="": self.output.appendPlainText(msg), input_function=self.input_method)
 
             self.output.clear()
             solution, objval = solver.solve()
